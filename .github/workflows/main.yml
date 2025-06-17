@@ -1,0 +1,31 @@
+name: Image to Video Converter
+
+on:
+  push:
+    paths:
+      - 'input.json'
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Install FFmpeg
+        run: sudo apt update && sudo apt install -y ffmpeg
+
+      - name: Download Image
+        run: |
+          IMAGE_URL=$(jq -r '.imageUrl' input.json)
+          wget -O generated_image.jpg "$IMAGE_URL"
+
+      - name: Convert to 5-second Video
+        run: ffmpeg -loop 1 -i generated_image.jpg -c:v libx264 -t 5 -pix_fmt yuv420p output_video.mp4
+
+      - name: Upload Video as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: youtube_video
+          path: output_video.mp4
